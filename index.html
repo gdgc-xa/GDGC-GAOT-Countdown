@@ -339,14 +339,31 @@
     fallback.style.display = 'block';
   }, true);
 
-  // ---- sound toggle: play/pause the bg.mp3 track on user gesture ----
-  // (browsers block autoplaying audio with sound until the user interacts — that's why it starts off)
+  // ---- sound: starts on first scroll, toggle button still works to mute/unmute ----
+  // (browsers block autoplaying audio with sound until the user interacts —
+  // a scroll counts as that interaction, so we kick off playback on the first scroll)
   const audio = document.getElementById('bgaudio');
   const soundBtn = document.getElementById('soundtoggle');
   let soundOn = false;
+  let startedByScroll = false;
+
+  function startAudioFromScroll() {
+    if (startedByScroll) return;
+    startedByScroll = true;
+    audio.play().then(() => {
+      soundOn = true;
+      soundBtn.textContent = '🔊';
+    }).catch(() => {
+      // autoplay-with-sound still blocked (e.g. desktop Safari) — leave it for the manual toggle
+      startedByScroll = false;
+    });
+  }
+  story.addEventListener('scroll', startAudioFromScroll, { passive: true });
+
   soundBtn.addEventListener('click', () => {
     soundOn = !soundOn;
     if (soundOn) {
+      startedByScroll = true;
       audio.play().catch(()=>{});
       soundBtn.textContent = '🔊';
     } else {
